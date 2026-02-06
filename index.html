@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Engineer Portfolio</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&family=Courier+Prime&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: { colors: { brand: '#33ff00', dark: '#050505' }, fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['Courier Prime', 'monospace'] } }
+            }
+        }
+    </script>
+
+    <style>
+        /* --- БАЗА --- */
+        body { 
+            background: radial-gradient(circle at 15% 50%, #111 0%, #000 75%);
+            color: #fff; 
+            overflow: hidden; 
+            height: 100vh;
+            user-select: none; 
+            margin: 0;
+        }
+
+        /* --- КАТЕГОРИИ --- */
+        .ctrl-btn {
+            display: flex; align-items: center; gap: 20px;
+            padding: 20px 25px; cursor: pointer;
+            transition: all 0.3s ease; opacity: 0.7;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            width: 100%; max-width: 350px;
+            position: relative; overflow: hidden;
+        }
+        
+        .ctrl-btn::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+            background: transparent; transition: 0.3s;
+        }
+
+        .ctrl-btn:hover, .ctrl-btn.active { 
+            opacity: 1; 
+            background: rgba(51, 255, 0, 0.05); 
+            border-color: #33ff00;
+            box-shadow: 0 0 20px rgba(51, 255, 0, 0.1);
+        }
+        
+        .ctrl-btn:hover::before, .ctrl-btn.active::before { background: #33ff00; }
+        
+        .ctrl-text h2 { 
+            font-size: 1.8rem; font-weight: 900; line-height: 1; 
+            letter-spacing: -1px; text-transform: uppercase; font-family: 'Inter', sans-serif;
+            margin: 0; color: #fff; transition: color 0.3s;
+        }
+        .ctrl-btn:hover h2 { color: #33ff00; }
+
+        .ctrl-text p { 
+            font-family: 'Courier Prime', monospace; font-size: 0.75rem; 
+            color: #888; margin: 5px 0 0 0; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* --- ГЛАВНАЯ КНОПКА --- */
+        .glitch-btn {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 15px 40px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+        }
+        
+        .glitch-btn:hover {
+            background: #33ff00; color: #000; border-color: #33ff00;
+            box-shadow: 0 0 25px rgba(51, 255, 0, 0.6); font-weight: bold;
+        }
+
+        /* --- ГАЛЕРЕЯ --- */
+        .gallery-container {
+            position: absolute; right: 0; 
+            top: 50%; transform: translateY(-50%) translateX(100px); 
+            height: 85vh; width: 70%; 
+            display: flex; flex-direction: column; justify-content: center;
+            overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth;
+            padding-bottom: 20px; 
+            opacity: 0; transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            pointer-events: none; perspective: 1000px;
+        }
+        .gallery-container.mode-v { padding-inline: calc(50% - 170px); }
+        .gallery-container.mode-h { padding-inline: calc(50% - 300px); }
+        .gallery-container.show { opacity: 1; transform: translateY(-50%) translateX(0); pointer-events: auto; z-index: 20; }
+        .gallery-container::-webkit-scrollbar { display: none; }
+
+        .track { display: flex; gap: 80px; padding: 100px 0; transform-style: preserve-3d; align-items: center; height: 100%; width: max-content; }
+
+        /* --- КАРТОЧКА --- */
+        .card {
+            scroll-snap-align: center; scroll-snap-stop: always;
+            position: relative; flex-shrink: 0;
+            background: #000; border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            transform: scale(0.85); opacity: 0.3; filter: grayscale(100%);
+            transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer; transform-style: preserve-3d;
+        }
+        .card.center-focus {
+            transform: scale(1.1); opacity: 1; filter: grayscale(0%);
+            border-color: #fff;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255,255,255,0.2);
+            z-index: 10;
+        }
+        .card.center-focus:hover { transform: scale(1.15) translateY(-5px); }
+        .card-v { width: 340px; height: 600px; }
+        .card-h { width: 600px; height: 340px; }
+        .card video { width: 100%; height: 100%; object-fit: cover; transition: all 0.5s ease; }
+
+        /* --- КНОПКА PLAY --- */
+        .play-overlay {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.3); transition: all 0.5s ease; z-index: 20;
+        }
+        .play-btn-img { width: 100px; height: auto; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6)); transition: all 0.3s; }
+        .card:hover .play-btn-img { transform: scale(1.1); filter: drop-shadow(0 20px 30px rgba(0,0,0,0.7)); }
+        .card.is-playing .play-overlay { opacity: 0; pointer-events: none; transform: scale(1.2); }
+
+        /* --- ТЕРМИНАЛ --- */
+        .terminal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            z-index: 100; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        .terminal-overlay.open { opacity: 1; pointer-events: auto; }
+
+        .terminal-box {
+            width: 700px; height: 500px;
+            background: #050505;
+            border: 1px solid #33ff00;
+            box-shadow: 0 0 50px rgba(51, 255, 0, 0.1);
+            padding: 30px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 16px;
+            color: #33ff00;
+            overflow: hidden;
+            position: relative;
+            display: flex; flex-direction: column;
+        }
+        .terminal-box::before {
+            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%);
+            background-size: 100% 4px; z-index: 2; pointer-events: none;
+        }
+
+        .terminal-content { flex-grow: 1; overflow-y: auto; z-index: 1; scrollbar-width: none; padding-bottom: 20px; }
+        .terminal-content::-webkit-scrollbar { display: none; }
+        .terminal-line { margin-bottom: 8px; display: block; line-height: 1.4; }
+        .user-input-line { display: flex; gap: 10px; opacity: 0; margin-top: 10px; }
+        .user-input-line.active { opacity: 1; }
+        input.term-input { background: transparent; border: none; outline: none; color: #fff; font-family: inherit; font-size: inherit; flex-grow: 1; caret-color: #33ff00; }
+        .sys-msg { color: #33ff00; text-shadow: 0 0 5px rgba(51, 255, 0, 0.4); }
+        .user-msg { color: #fff; margin-top: 5px; margin-bottom: 15px; }
+        
+        .close-term {
+            position: absolute; top: 20px; right: 20px;
+            color: #555; cursor: pointer; z-index: 10; font-weight: bold; font-family: 'Courier Prime', monospace;
+            border: 1px solid #333; padding: 5px 10px; font-size: 12px; transition: all 0.2s; text-transform: uppercase;
+        }
+        .close-term:hover { color: #33ff00; border-color: #33ff00; background: rgba(51,255,0,0.1); }
+
+        .hero-animate { animation: slideIn 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; opacity: 0; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+        .delay-100 { animation-delay: 0.1s; } .delay-200 { animation-delay: 0.2s; }
+        .cursor-blink { animation: blink 1s step-end infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body class="selection:bg-white selection:text-black">
+    
+    <audio id="snd-trans" src="transition.mp3" preload="auto"></audio>
+    <audio id="snd-click" src="tunetank.com_tap-metallic-(small).wav" preload="auto"></audio>
+    <audio id="snd-swipe" src="swipe.mp3" preload="auto"></audio>
+    <audio id="snd-type" src="keyboard.mp3" preload="auto"></audio>
+
+    <div class="absolute top-0 left-0 w-[40%] h-full flex flex-col justify-center pl-16 z-30 bg-gradient-to-r from-black/95 via-black/80 to-transparent">
+        <div class="mb-12 hero-animate">
+            <h1 class="text-6xl lg:text-7xl font-black leading-[0.9] tracking-tighter text-white">
+                VISUAL<br><span class="text-gray-500">ENGINEER</span>
+            </h1>
+            <div class="mt-4 font-mono text-gray-300 text-sm flex items-center">
+                <span class="mr-2">></span><span id="typing-text"></span><span class="w-2 h-4 bg-brand ml-1 cursor-blink"></span>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-4 hero-animate delay-100">
+            <div class="ctrl-btn" id="btn-v" onclick="switchGallery('v')">
+                <div class="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center text-white bg-white/5 backdrop-blur shrink-0">
+                    <i data-lucide="smartphone" class="w-5 h-5"></i>
+                </div>
+                <div class="ctrl-text">
+                    <h2 data-value="REELS">REELS</h2>
+                    <p data-value="ВЕРТИКАЛЬНЫЕ РОЛИКИ">ВЕРТИКАЛЬНЫЕ РОЛИКИ</p>
+                </div>
+            </div>
+            
+            <div class="ctrl-btn" id="btn-h" onclick="switchGallery('h')">
+                <div class="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center text-white bg-white/5 backdrop-blur shrink-0">
+                    <i data-lucide="monitor-play" class="w-5 h-5"></i>
+                </div>
+                <div class="ctrl-text">
+                    <h2 data-value="YOUTUBE">YOUTUBE</h2>
+                    <p data-value="ИМИДЖЕВЫЙ КОНТЕНТ">ИМИДЖЕВЫЙ КОНТЕНТ</p>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="openTerminal()" class="hero-animate delay-200 mt-16 w-max glitch-btn rounded-full">
+            [ INITIALIZE CONTACT ]
+        </button>
+    </div>
+
+    <div class="gallery-container mode-v" id="gallery-v"><div class="track" id="track-v"></div></div>
+    <div class="gallery-container mode-h" id="gallery-h"><div class="track" id="track-h"></div></div>
+
+    <div class="terminal-overlay" id="term-overlay">
+        <div class="terminal-box">
+            <div class="close-term" onclick="closeTerminal()">[ ОТКЛЮЧИТЬСЯ ]</div>
+            <div class="terminal-content" id="term-content"></div>
+            <div class="user-input-line" id="input-line">
+                <span id="prompt-text">guest@visual:~$</span>
+                <input type="text" class="term-input" id="term-input" autocomplete="off">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        
+        // --- 1. АУДИО ---
+        const sndTrans = document.getElementById('snd-trans');
+        const sndClick = document.getElementById('snd-click');
+        const sndSwipe = document.getElementById('snd-swipe');
+        const sndType  = document.getElementById('snd-type');
+
+        function playSound(audio, volume = 0.3) { 
+            if (audio) { 
+                audio.currentTime = 0; 
+                audio.volume = volume; 
+                audio.play().catch(e => {}); 
+            } 
+        }
+
+        // --- 2. МАТРИЦА (TEXT EFFECT) ---
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        const ruLetters = "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
+
+        function runHackEffect(element, isRu = false) {
+            let iteration = 0;
+            const originalText = element.dataset.value; 
+            if (!originalText) return;
+            const alphabet = isRu ? ruLetters : letters;
+            
+            clearInterval(element.interval);
+
+            element.interval = setInterval(() => {
+                element.innerText = originalText
+                    .split("")
+                    .map((letter, index) => {
+                        if(index < iteration) return originalText[index];
+                        return alphabet[Math.floor(Math.random() * alphabet.length)];
+                    })
+                    .join("");
+                
+                if(iteration >= originalText.length){ 
+                    clearInterval(element.interval);
+                }
+                
+                iteration += 1 / 2;
+            }, 30);
+        }
+
+        document.querySelectorAll('.ctrl-btn').forEach(btn => {
+            btn.addEventListener('mouseenter', (e) => {
+                const h2 = e.currentTarget.querySelector('h2');
+                const p = e.currentTarget.querySelector('p');
+                runHackEffect(h2, false);
+                runHackEffect(p, true);
+                playSound(sndTrans, 0.1); 
+            });
+        });
+
+        // --- 3. ГАЛЕРЕЯ ---
+        const vData = [ {v:"1.mp4"}, {v:"2.mp4"}, {v:"3.mp4"}, {v:"4.mp4"}, {v:"5.mp4"} ];
+        const hData = [ {v:"01.mp4"}, {v:"02.mp4"}, {v:"03.mp4"}, {v:"04.mp4"}, {v:"05.mp4"} ];
+
+        function createCard(item, type) {
+            const card = document.createElement('div');
+            card.className = `card ${type === 'v' ? 'card-v' : 'card-h'}`;
+            card.innerHTML = `
+                <video src="${item.v}" loop playsinline muted></video>
+                <div class="play-overlay"><img src="play-3d.png" alt="Play" class="play-btn-img"></div>
+            `;
+            const vid = card.querySelector('video');
+            card.addEventListener('click', () => {
+                if (!vid.paused) {
+                    vid.pause(); vid.muted = true; card.classList.remove('is-playing');
+                } else {
+                    document.querySelectorAll('video').forEach(v => {
+                        if (v !== vid) { v.pause(); v.muted = true; v.currentTime = 0; v.parentElement.classList.remove('is-playing'); }
+                    });
+                    vid.muted = false; vid.play().catch(()=>{});
+                    card.classList.add('is-playing'); playSound(sndClick);
+                }
+            });
+            return card;
+        }
+
+        const trackV = document.getElementById('track-v');
+        const trackH = document.getElementById('track-h');
+        vData.forEach(item => trackV.appendChild(createCard(item, 'v')));
+        hData.forEach(item => trackH.appendChild(createCard(item, 'h')));
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const card = entry.target;
+                if (entry.isIntersecting) {
+                    card.classList.add('center-focus');
+                } else {
+                    card.classList.remove('center-focus');
+                    card.classList.remove('is-playing');
+                    card.querySelector('video').pause();
+                }
+            });
+        }, { rootMargin: '-50% 0px -50% 0px' });
+        document.querySelectorAll('.card').forEach(c => observer.observe(c));
+
+        document.getElementById('gallery-v').addEventListener('wheel', (e) => {
+            if(e.deltaY !== 0) { e.preventDefault(); document.getElementById('gallery-v').scrollLeft += e.deltaY * 4; }
+        });
+        document.getElementById('gallery-h').addEventListener('wheel', (e) => {
+            if(e.deltaY !== 0) { e.preventDefault(); document.getElementById('gallery-h').scrollLeft += e.deltaY * 4; }
+        });
+
+        function switchGallery(type) {
+            playSound(sndTrans);
+            const galV = document.getElementById('gallery-v');
+            const galH = document.getElementById('gallery-h');
+            const btnV = document.getElementById('btn-v');
+            const btnH = document.getElementById('btn-h');
+
+            galV.classList.remove('show'); galH.classList.remove('show');
+            btnV.classList.remove('active'); btnH.classList.remove('active');
+            
+            document.querySelectorAll('video').forEach(v => { v.pause(); v.muted = true; v.parentElement.classList.remove('is-playing'); });
+
+            if (type === 'v') {
+                galV.classList.add('show'); btnV.classList.add('active');
+            } else {
+                galH.classList.add('show'); btnH.classList.add('active');
+            }
+        }
+
+        const typeText = "Mac Mini M4. Adobe Suite. Fast Delivery."; 
+        let typeI = 0;
+        function typeWriterTitle() { 
+            if (typeI < typeText.length) { document.getElementById("typing-text").textContent += typeText.charAt(typeI); typeI++; setTimeout(typeWriterTitle, 80); }
+        }
+
+        window.onload = () => { setTimeout(typeWriterTitle, 800); switchGallery('v'); };
+
+        /* =========================================
+           🔥🔥🔥 ТЕРМИНАЛ ЛОГИКА (RANDOM MODE) 🔥🔥🔥
+           ========================================= */
+        
+        // 👇👇👇 ВСТАВЬ СЮДА ТОКЕН И ID !!! 👇👇👇
+        const TG_TOKEN = 'ВСТАВЬ_ТОКЕН_СЮДА'; 
+        const TG_CHAT_ID = 'ВСТАВЬ_ID_СЮДА';
+        // 👆👆👆
+
+        const termOverlay = document.getElementById('term-overlay');
+        const termContent = document.getElementById('term-content');
+        const termInput = document.getElementById('term-input');
+        const inputLine = document.getElementById('input-line');
+        const promptText = document.getElementById('prompt-text');
+        
+        let step = 0;
+        let formData = { name: '', contact: '', msg: '' };
+        let timeouts = []; 
+
+        // Базы фраз для рандома
+        const phrases = {
+            name: [
+                (val) => `ПРИНЯТО, ${val}. КРАСИВОЕ ИМЯ ДЛЯ ТИТРОВ.`,
+                (val) => `${val}? ЗВУЧИТ КАК ИМЯ БУДУЩЕГО МИЛЛИОНЕРА.`,
+                (val) => `О, ${val}. Я ЗНАЛ, ЧТО ТЫ ПРИДЕШЬ.`,
+                (val) => `ДОСТУП РАЗРЕШЕН, ${val}. ВХОДИ.`,
+                (val) => `${val}... БАЗА ДАННЫХ ОБНОВЛЕНА.`
+            ],
+            contact: [
+                "ЗАПИСАЛ В ЧЕРНУЮ КНИЖЕЧКУ. ШУЧУ.",
+                "ТЕЛЕФОН ПРОДАН СПАМЕРАМ... РАССЛАБЬСЯ, Я МОГИЛА.",
+                "ОТПРАВИЛ ГОЛУБЯ С ПОДТВЕРЖДЕНИЕМ.",
+                "СВЯЖЕМСЯ БЫСТРЕЕ, ЧЕМ ТЫ ЗАКРОЕШЬ ВКЛАДКУ.",
+                "КОНТАКТ ПРИНЯТ. СПАМА НЕ БУДЕТ, ОБЕЩАЮ."
+            ],
+            success: [
+                "ВЫГЛЯДИТ КАК ВЫЗОВ. БУЖУ ИНЖЕНЕРА...",
+                "ЗАДАЧА ЯСНА. ИНЖЕНЕР УЖЕ ОТКРЫВАЕТ AFTER EFFECTS.",
+                "ТВОЯ ЗАЯВКА УПАЛА НА СТОЛ. ИНЖЕНЕР УЛЫБНУЛСЯ.",
+                "СИСТЕМА В ВОСТОРГЕ. СКОРО СВЯЖЕМСЯ.",
+                "ОПЕРАТОР ПОЛУЧИЛ УВЕДОМЛЕНИЕ. ОН УЖЕ ПЕЧАТАЕТ."
+            ]
+        };
+
+        function getRandomPhrase(arr, val = '') {
+            const item = arr[Math.floor(Math.random() * arr.length)];
+            return typeof item === 'function' ? item(val) : item;
+        }
+
+        function playTypeSound() {
+            if(sndType) {
+                const clone = sndType.cloneNode(); 
+                clone.volume = 0.4;
+                clone.playbackRate = 0.9 + Math.random() * 0.2; 
+                clone.play().catch(()=>{});
+            }
+        }
+
+        function openTerminal() {
+            termOverlay.classList.add('open');
+            termContent.innerHTML = ''; 
+            inputLine.classList.remove('active');
+            step = 0;
+            
+            addTermLine('СКАНИРОВАНИЕ СЕТЧАТКИ...', 30, 300);
+            addTermLine('ОБНАРУЖЕН ЧЕЛОВЕК.', 30, 1200);
+            addTermLine('ЛАДНО, ПРОХОДИ.', 30, 2000);
+            
+            timeouts.push(setTimeout(() => {
+                enableInput('КАК ТЕБЯ ЗОВУТ? >');
+            }, 2800));
+        }
+
+        function closeTerminal() {
+            termOverlay.classList.remove('open');
+            timeouts.forEach(t => clearTimeout(t));
+            timeouts = [];
+        }
+
+        function addTermLine(text, speed = 30, delay = 0) {
+            timeouts.push(setTimeout(() => {
+                const line = document.createElement('div');
+                line.className = 'terminal-line sys-msg';
+                termContent.appendChild(line);
+                
+                let charIndex = 0;
+                function type() {
+                    if (charIndex < text.length) {
+                        line.textContent += text.charAt(charIndex);
+                        charIndex++;
+                        termContent.scrollTop = termContent.scrollHeight;
+                        playTypeSound(); 
+                        setTimeout(type, speed);
+                    }
+                }
+                type();
+            }, delay));
+        }
+
+        function enableInput(prompt) {
+            inputLine.classList.add('active');
+            promptText.textContent = prompt;
+            termInput.value = '';
+            termInput.focus();
+            termInput.onblur = () => termInput.focus();
+        }
+
+        termInput.addEventListener('keydown', (e) => {
+            playTypeSound(); 
+            
+            if (e.key === 'Enter') {
+                const value = termInput.value.trim();
+                if (!value) return;
+
+                const userLine = document.createElement('div');
+                userLine.className = 'terminal-line user-msg';
+                userLine.textContent = `${promptText.textContent} ${value}`;
+                termContent.appendChild(userLine);
+                
+                inputLine.classList.remove('active'); 
+                processStep(value);
+            }
+        });
+
+        function processStep(value) {
+            if (step === 0) {
+                formData.name = value;
+                const phrase = getRandomPhrase(phrases.name, value);
+                addTermLine(phrase, 20, 300);
+                timeouts.push(setTimeout(() => enableInput('КУДА СКИДЫВАТЬ ШЕДЕВРЫ? (TG) >'), 1500));
+                step++;
+            } else if (step === 1) {
+                formData.contact = value;
+                const phrase = getRandomPhrase(phrases.contact);
+                addTermLine(phrase, 20, 300);
+                timeouts.push(setTimeout(() => enableInput('ЧТО НУЖНО СМОНТИРОВАТЬ? >'), 1500));
+                step++;
+            } else if (step === 2) {
+                formData.msg = value;
+                step++;
+                sendToTelegram();
+            }
+        }
+
+        function sendToTelegram() {
+            addTermLine('АНАЛИЗИРУЮ ЗАДАЧУ... [||||||] 100%', 20, 0);
+            
+            const text = `🔥 ЗАЯВКА (RANDOM)%0A👤 Клиент: ${formData.name}%0A📞 Связь: ${formData.contact}%0A💬 Задача: ${formData.msg}`;
+            
+            fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${text}`)
+            .then(res => {
+                if(res.ok) {
+                    const phrase = getRandomPhrase(phrases.success);
+                    addTermLine(phrase, 30, 800);
+                    addTermLine('>>> ОН УЖЕ ПЕЧАТАЕТ ТЕБЕ.', 30, 3500);
+                    timeouts.push(setTimeout(() => closeTerminal(), 6000));
+                } else {
+                    // Фейковый успех при ошибке сети
+                    addTermLine('СПУТНИК СБИТ... ЗАПУСКАЮ ГОЛУБЕЙ...', 30, 500);
+                    addTermLine('ГОЛУБИ СПРАВИЛИСЬ. ЗАЯВКА ДОСТАВЛЕНА.', 30, 2500);
+                    addTermLine('(НО ЛУЧШЕ НАПИШИ МНЕ В ЛИЧКУ, ЧТОБЫ НАВЕРНЯКА)', 20, 4500);
+                    timeouts.push(setTimeout(() => closeTerminal(), 8000));
+                }
+            })
+            .catch(err => {
+                // Та же логика для catch
+                addTermLine('СБОЙ МАТРИЦЫ... ПЕРЕХОЖУ НА ТЕЛЕПАТИЮ...', 30, 500);
+                addTermLine('СИГНАЛ ПРОШЕЛ. ПРИНЯТО.', 30, 2500);
+                timeouts.push(setTimeout(() => closeTerminal(), 8000));
+            });
+        }
+    </script>
+</body>
+</html>
