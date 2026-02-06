@@ -546,9 +546,15 @@
         function sendToTelegram() {
             addTermLine('АНАЛИЗИРУЮ ЗАДАЧУ... [||||||] 100%', 20, 0);
             
-            const text = `🔥 ЗАЯВКА (FINAL)%0A👤 Клиент: ${formData.name}%0A📞 Связь: ${formData.contact}%0A💬 Задача: ${formData.msg}`;
+            // Собираем текст (тут обычные кавычки, чтобы наверняка)
+            const text = '🔥 ЗАЯВКА (FINAL)%0A👤 Клиент: ' + formData.name + '%0A📞 Связь: ' + formData.contact + '%0A💬 Задача: ' + formData.msg;
             
-            fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${text}`)
+            // 👇 ПРЯМАЯ ССЫЛКА (БЕЗ ПЕРЕМЕННЫХ И БЭКТИКОВ)
+            // Твой токен: 8411368574...
+            // Твой ID: 6571262985
+            const url = 'https://api.telegram.org/bot8411368574:AAF2BVx59PtYh4sZk52nDUriwqWbvy2Ilqs/sendMessage?chat_id=6571262985&text=' + text;
+            
+            fetch(url)
             .then(res => {
                 if(res.ok) {
                     const phrase = getRandomPhrase(phrases.success);
@@ -558,19 +564,15 @@
                     addTermLine('СЕССИЯ ЗАВЕРШЕНА.', 30, 5000);
                     timeouts.push(setTimeout(() => closeTerminal(), 8000));
                 } else {
-                    addTermLine('СПУТНИК СБИТ... ЗАПУСКАЮ ГОЛУБЕЙ...', 30, 500);
-                    addTermLine('ГОЛУБИ СПРАВИЛИСЬ. ЗАЯВКА ДОСТАВЛЕНА.', 30, 2500);
-                    addTermLine('ЕВГЕНИЙ НАПИШЕТ ВАМ В ТГ.', 30, 4000);
+                    addTermLine('ОШИБКА СЕТИ... НО Я ПОПРОБУЮ ЕЩЕ РАЗ.', 30, 500);
+                    // Вывод ошибки в консоль для проверки
+                    console.error('Telegram Error');
                     timeouts.push(setTimeout(() => closeTerminal(), 8000));
                 }
             })
             .catch(err => {
+                console.error(err);
                 addTermLine('СБОЙ МАТРИЦЫ... ПЕРЕХОЖУ НА ТЕЛЕПАТИЮ...', 30, 500);
-                addTermLine('СИГНАЛ ПРОШЕЛ. ЖДИТЕ ЕВГЕНИЯ В ТГ.', 30, 2500);
                 timeouts.push(setTimeout(() => closeTerminal(), 8000));
             });
         }
-    </script>
-</body>
-</html>
-
